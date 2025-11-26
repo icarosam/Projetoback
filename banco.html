@@ -1,1 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Sistema de Alunos</title>
+  <style>
+    body { font-family: Arial; margin: 20px; }
+    #loginBox, #tabelaBox { max-width: 400px; }
+    table { border-collapse: collapse; margin-top: 20px; width: 500px; }
+    th, td { border: 1px solid #333; padding: 8px; text-align: center; }
+    th { background: #eee; }
+    input { margin: 5px 0; width: 100%; padding: 8px; }
+    button { padding: 10px; width: 100%; margin-top: 10px; }
+  </style>
+</head>
+<body>
 
+<!-- BLOCO DE LOGIN -->
+<div id="loginBox">
+  <h2>Login</h2>
+  <input type="text" id="username" placeholder="Digite seu nome">
+  <button onclick="login()">Entrar</button>
+</div>
+
+<!-- BLOCO DA TABELA -->
+<div id="tabelaBox" style="display:none;">
+  <h2>Sistema de Alunos</h2>
+
+  <table id="tabelaAlunos">
+    <thead>
+      <tr>
+        <th>Nome</th>
+        <th>Notas</th>
+        <th>Média</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <!-- ÁREA visível somente para ADM -->
+  <div id="adminArea" style="display:none;">
+    <h3>Adicionar novo aluno</h3>
+    <input type="text" id="novoNome" placeholder="Nome do aluno">
+    <input type="text" id="novaNota" placeholder="Notas separadas por vírgula (ex: 7,8,9)">
+    <button onclick="adicionarAluno()">Adicionar</button>
+  </div>
+</div>
+
+<script>
+  // -------------------------------------------------------------
+  // DADOS INICIAIS DOS ALUNOS
+  // -------------------------------------------------------------
+  let alunos = [
+    { nome: "Ana", notas: [7, 8] },
+    { nome: "Carlos", notas: [6, 5] },
+    { nome: "Beatriz", notas: [9, 9] }
+  ];
+
+  let usuarioADM = false; // controla se o usuário logado é administrador
+
+  // -------------------------------------------------------------
+  // FUNÇÃO DE LOGIN
+  // -------------------------------------------------------------
+  function login() {
+
+    // pega o nome digitado no input
+    const nomeUsuario = document.getElementById("username").value.trim();
+
+    // se o nome for Pedro, ativa modo ADM
+    if (nomeUsuario === "Pedro") {
+      usuarioADM = true;
+    }
+
+    // esconde caixa de login
+    document.getElementById("loginBox").style.display = "none";
+
+    // mostra a tabela
+    document.getElementById("tabelaBox").style.display = "block";
+
+    // se for ADM, mostra área para editar/adicionar alunos
+    if (usuarioADM) {
+      document.getElementById("adminArea").style.display = "block";
+    }
+
+    // carrega a tabela
+    carregarTabela();
+  }
+
+  // -------------------------------------------------------------
+  // FUNÇÃO PARA CALCULAR MÉDIA
+  // -------------------------------------------------------------
+  function calcularMedia(notas) {
+    const soma = notas.reduce((total, n) => total + n, 0);
+    return (soma / notas.length).toFixed(2);
+  }
+
+  // -------------------------------------------------------------
+  // FUNÇÃO QUE EXIBE A TABELA NA TELA
+  // -------------------------------------------------------------
+  function carregarTabela() {
+    const corpo = document.querySelector("#tabelaAlunos tbody");
+    corpo.innerHTML = ""; // limpa tabela antes de recriar
+
+    alunos.forEach((aluno, index) => {
+
+      const media = calcularMedia(aluno.notas);
+
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${aluno.nome}</td>
+        <td>${aluno.notas.join(", ")}</td>
+        <td>${media}</td>
+      `;
+
+      // Se for ADM, torna a linha clicável para edição
+      if (usuarioADM) {
+        tr.style.cursor = "pointer";
+        tr.title = "Clique para editar";
+        tr.onclick = () => editarAluno(index);
+      }
+
+      corpo.appendChild(tr);
+    });
+  }
+
+  // -------------------------------------------------------------
+  // FUNÇÃO PARA ADICIONAR NOVO ALUNO (APENAS ADM)
+  // -------------------------------------------------------------
+  function adicionarAluno() {
+    const nome = document.getElementById("novoNome").value.trim();
+    const notasTexto = document.getElementById("novaNota").value.trim();
+
+    if (!nome || !notasTexto) {
+      alert("Preencha nome e notas!");
+      return;
+    }
+
+    const notas = notasTexto.split(",").map(n => Number(n));
+
+    alunos.push({ nome: nome, notas: notas });
+
+    carregarTabela();
+
+    document.getElementById("novoNome").value = "";
+    document.getElementById("novaNota").value = "";
+  }
+
+  // -------------------------------------------------------------
+  // FUNÇÃO PARA EDITAR ALUNO (APENAS ADM)
+  // -------------------------------------------------------------
+  function editarAluno(indice) {
+    const aluno = alunos[indice];
+
+    const novoNome = prompt("Editar nome:", aluno.nome);
+    const novasNotas = prompt("Editar notas (ex: 8,7,10):", aluno.notas.join(","));
+
+    if (novoNome && novasNotas) {
+      aluno.nome = novoNome;
+      aluno.notas = novasNotas.split(",").map(n => Number(n));
+      carregarTabela();
+    }
+  }
+</script>
+</body>
+</html>
